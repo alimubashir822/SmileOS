@@ -82,7 +82,20 @@ export default function Footer() {
         </div>
 
         <div className="mt-8 pt-8 border-t border-slate-800 text-xs text-center flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-          <p>&copy; {currentYear} SmileOS Inc. All rights reserved. Registered Dental Group.</p>
+          <div className="space-y-1 text-center md:text-left">
+            <p>&copy; {currentYear} SmileOS Inc. All rights reserved. Registered Dental Group.</p>
+            <p className="text-slate-500">
+              Healthcare system by{" "}
+              <a 
+                href="http://www.medclinicx.com/" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-blue-500 hover:text-blue-400 font-medium hover:underline"
+              >
+                Med Clinic X
+              </a>
+            </p>
+          </div>
           <div className="flex space-x-6">
             <span className="hover:text-white cursor-pointer transition-colors">Privacy Policy</span>
             <span className="hover:text-white cursor-pointer transition-colors">Terms of Service</span>
