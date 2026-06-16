@@ -22,7 +22,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 401 });
     }
 
-    if (role && user.role !== role) {
+    let targetRole = role;
+    if (role === "DOCTOR") targetRole = "DENTIST";
+
+    if (role && user.role !== targetRole) {
       return NextResponse.json({ error: "Unauthorized role access" }, { status: 403 });
     }
 
@@ -30,7 +33,7 @@ export async function POST(request: Request) {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role,
+      role: user.role === "DENTIST" ? "DOCTOR" : user.role,
       patientId: user.patient?.id || undefined,
       doctorId: user.doctor?.id || undefined,
     };

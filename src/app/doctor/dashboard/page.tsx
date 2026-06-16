@@ -15,6 +15,7 @@ import {
   ClipboardCopy,
   BookOpen
 } from "lucide-react";
+import ToothChart from "@/components/ToothChart";
 
 interface Appointment {
   id: string;
@@ -23,6 +24,7 @@ interface Appointment {
   treatmentName: string;
   status: string;
   notes: string | null;
+  visitStatus: string;
   patient: {
     id: string;
     phone: string | null;
@@ -88,8 +90,17 @@ export default function DoctorDashboard() {
         setPatients(data.patients || []);
         
         if (data.patients && data.patients.length > 0) {
-          setSelectedPatientId(data.patients[0].id);
-          setSelectedPatient(data.patients[0]);
+          // Keep current selection if valid, otherwise select the first one
+          if (selectedPatientId) {
+            const exists = data.patients.some((p: Patient) => p.id === selectedPatientId);
+            if (!exists) {
+              setSelectedPatientId(data.patients[0].id);
+              setSelectedPatient(data.patients[0]);
+            }
+          } else {
+            setSelectedPatientId(data.patients[0].id);
+            setSelectedPatient(data.patients[0]);
+          }
         }
       }
     } catch (err) {
@@ -152,6 +163,22 @@ export default function DoctorDashboard() {
     }
   };
 
+  const handleUpdateVisitStatus = async (apptId: string, status: string) => {
+    try {
+      const res = await fetch("/api/patient/checkin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appointmentId: apptId, visitStatus: status })
+      });
+      if (res.ok) {
+        // Refresh dashboard data
+        await fetchDoctorData();
+      }
+    } catch (err) {
+      console.error("Failed to update visit status:", err);
+    }
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     alert("Copied to clipboard! Ready to copy to email/patient portal.");
@@ -167,6 +194,7 @@ export default function DoctorDashboard() {
   }
 
   const activeTreatment = selectedPatient?.treatments.find(t => t.status === "IN_PROGRESS");
+  const currentAppt = appointments.find(a => a.patient.id === selectedPatient?.id && a.status !== "CANCELLED");
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -180,11 +208,37 @@ export default function DoctorDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Left Side: Schedule */}
-        <div className="lg:col-span-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4 h-[75vh] flex flex-col">
+        <div className="lg:col-span-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4 h-[80vh] flex flex-col">
           <h2 className="text-lg font-bold text-slate-950 flex items-center space-x-1.5 shrink-0">
             <Clock className="h-5 w-5 text-blue-600" />
             <span>Clinic Day Agenda</span>
           </h2>
+
+          {/* Roster & Waiting Room Statistics Panel */}
+          <div className="grid grid-cols-4 gap-2 border-b border-slate-100 pb-4 shrink-0 text-center">
+            <div className="bg-slate-50 border border-slate-100 p-2 rounded-xl">
+              <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Scheduled</span>
+              <strong className="text-sm font-extrabold text-slate-900">{appointments.length}</strong>
+            </div>
+            <div className="bg-blue-50 border border-blue-100 p-2 rounded-xl">
+              <span className="block text-[9px] font-bold text-blue-500 uppercase tracking-wider">Waiting</span>
+              <strong className="text-sm font-extrabold text-blue-700">
+                {appointments.filter(a => a.visitStatus === "CHECKED_IN").length}
+              </strong>
+            </div>
+            <div className="bg-purple-50 border border-purple-100 p-2 rounded-xl animate-pulse">
+              <span className="block text-[9px] font-bold text-purple-500 uppercase tracking-wider">In Chair</span>
+              <strong className="text-sm font-extrabold text-purple-700">
+                {appointments.filter(a => a.visitStatus === "WITH_DENTIST").length}
+              </strong>
+            </div>
+            <div className="bg-green-50 border border-green-100 p-2 rounded-xl">
+              <span className="block text-[9px] font-bold text-green-500 uppercase tracking-wider">Done</span>
+              <strong className="text-sm font-extrabold text-green-700">
+                {appointments.filter(a => a.visitStatus === "COMPLETED").length}
+              </strong>
+            </div>
+          </div>
           
           <div className="flex-1 overflow-y-auto space-y-3 pr-1">
             {appointments.length > 0 ? (
@@ -197,10 +251,22 @@ export default function DoctorDashboard() {
                     className={`w-full text-left p-4 rounded-xl border transition cursor-pointer flex justify-between items-center ${isSelected ? "border-blue-500 bg-blue-50/20" : "border-slate-100 hover:border-slate-200 hover:bg-slate-50"}`}
                   >
                     <div>
-                      <div className="flex items-center space-x-1.5">
+                      <div className="flex items-center space-x-1.5 flex-wrap gap-1">
                         <strong className="block text-slate-900 text-sm">{appt.patient.user.name}</strong>
                         {appt.status === "CANCELLED" && (
                           <span className="bg-red-50 text-red-700 text-[9px] font-bold px-1.5 py-0.5 rounded">Cancelled</span>
+                        )}
+                        {appt.status !== "CANCELLED" && (
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${
+                            appt.visitStatus === "SCHEDULED" ? "bg-slate-50 text-slate-600 border-slate-200" :
+                            appt.visitStatus === "CHECKED_IN" ? "bg-blue-50 text-blue-700 border-blue-200 animate-pulse" :
+                            appt.visitStatus === "WITH_DENTIST" ? "bg-purple-50 text-purple-700 border-purple-200 animate-pulse" :
+                            "bg-green-50 text-green-700 border-green-200"
+                          }`}>
+                            {appt.visitStatus === "SCHEDULED" ? "Scheduled" :
+                             appt.visitStatus === "CHECKED_IN" ? "Waiting Room" :
+                             appt.visitStatus === "WITH_DENTIST" ? "In Chair" : "Completed"}
+                          </span>
                         )}
                       </div>
                       <span className="block text-xs text-slate-500 mt-1">Journey Stage: {appt.treatmentName}</span>
@@ -219,14 +285,14 @@ export default function DoctorDashboard() {
           </div>
         </div>
 
-        {/* Right Side: Details & AI briefing sheet */}
+        {/* Right Side: Details & Clinical Tools */}
         <div className="lg:col-span-7 space-y-6">
           
           {selectedPatient ? (
             <div className="space-y-6">
               
               {/* Profile Card */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6 animate-fadeIn">
                 <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                   <div className="flex items-center space-x-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-sm shrink-0">
@@ -271,7 +337,64 @@ export default function DoctorDashboard() {
                     ))}
                   </div>
                 </div>
+
+                {/* Live Visit Status Manager */}
+                {currentAppt && (
+                  <div className="border-t border-slate-100 pt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Live Visit Status Manager</span>
+                      <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-bold mt-1 border ${
+                        currentAppt.visitStatus === "SCHEDULED" ? "bg-slate-50 text-slate-700 border-slate-200" :
+                        currentAppt.visitStatus === "CHECKED_IN" ? "bg-blue-50 text-blue-700 border-blue-200 animate-pulse" :
+                        currentAppt.visitStatus === "WITH_DENTIST" ? "bg-purple-50 text-purple-700 border-purple-200 animate-pulse" :
+                        "bg-green-50 text-green-700 border-green-200"
+                      }`}>
+                        {currentAppt.visitStatus === "SCHEDULED" ? "Scheduled" :
+                         currentAppt.visitStatus === "CHECKED_IN" ? "Checked In / Waiting" :
+                         currentAppt.visitStatus === "WITH_DENTIST" ? "With Dentist / In Chair" : "Completed"}
+                      </span>
+                    </div>
+
+                    <div className="flex gap-2">
+                      {currentAppt.visitStatus === "SCHEDULED" && (
+                        <button
+                          onClick={() => handleUpdateVisitStatus(currentAppt.id, "CHECKED_IN")}
+                          className="rounded-lg border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 font-bold px-3 py-1.5 text-xs transition cursor-pointer"
+                        >
+                          Check In Patient
+                        </button>
+                      )}
+                      {currentAppt.visitStatus === "CHECKED_IN" && (
+                        <button
+                          onClick={() => handleUpdateVisitStatus(currentAppt.id, "WITH_DENTIST")}
+                          className="rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-bold px-3 py-1.5 text-xs transition cursor-pointer shadow"
+                        >
+                          Call to Dental Chair
+                        </button>
+                      )}
+                      {currentAppt.visitStatus === "WITH_DENTIST" && (
+                        <button
+                          onClick={() => handleUpdateVisitStatus(currentAppt.id, "COMPLETED")}
+                          className="rounded-lg bg-green-600 text-white hover:bg-green-700 font-bold px-3 py-1.5 text-xs transition cursor-pointer shadow"
+                        >
+                          Complete Visit
+                        </button>
+                      )}
+                      {currentAppt.visitStatus !== "SCHEDULED" && currentAppt.visitStatus !== "COMPLETED" && (
+                        <button
+                          onClick={() => handleUpdateVisitStatus(currentAppt.id, "SCHEDULED")}
+                          className="rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 font-bold px-2 py-1.5 text-xs transition cursor-pointer"
+                        >
+                          Reset
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* Interactive Digital Tooth Chart */}
+              <ToothChart patientId={selectedPatient.id} patientName={selectedPatient.user.name} />
 
               {/* Dentist AI Briefing & Explanations Widget */}
               <div className="rounded-2xl border border-blue-200 bg-blue-50/20 p-6 shadow-sm space-y-4">

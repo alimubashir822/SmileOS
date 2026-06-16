@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const sessionStr = Buffer.from(sessionCookie.value, "base64").toString("utf-8");
     const sessionUser = JSON.parse(sessionStr);
     
-    if (!["DENTIST", "ASSISTANT", "RECEPTIONIST"].includes(sessionUser.role)) {
+    if (!["DENTIST", "DOCTOR", "ASSISTANT", "RECEPTIONIST"].includes(sessionUser.role)) {
       return NextResponse.json({ error: "Unauthorized role access" }, { status: 403 });
     }
 

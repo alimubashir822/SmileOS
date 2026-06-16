@@ -28,11 +28,14 @@ export async function GET() {
       return NextResponse.json({ error: "Patient profile not found" }, { status: 404 });
     }
 
+    const todayStr = new Date().toISOString().split("T")[0];
+
     // 1. Next Appointment
     const nextAppointment = await prisma.appointment.findFirst({
       where: {
         patientId,
-        status: { in: ["PENDING", "CONFIRMED"] }
+        status: { in: ["PENDING", "CONFIRMED"] },
+        date: { gte: todayStr }
       },
       include: {
         doctor: {

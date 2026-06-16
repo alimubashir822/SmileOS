@@ -84,6 +84,7 @@ model Appointment {
   treatmentName String   // e.g. "Cleaning", "Implant Placement"
   status        String   // "PENDING", "CONFIRMED", "CANCELLED"
   notes         String?
+  visitStatus   String   @default("SCHEDULED") // "SCHEDULED", "CHECKED_IN", "WITH_DENTIST", "COMPLETED"
   createdAt     DateTime @default(now())
 }
 

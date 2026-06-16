@@ -28,6 +28,7 @@ interface Appointment {
   treatmentName: string;
   status: string;
   notes: string | null;
+  visitStatus: string;
   doctor: {
     user: {
       name: string;
@@ -93,12 +94,36 @@ export default function PatientDashboard() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [isAiResponding, setIsAiResponding] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Simulation states
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+
+  // QR Check-in states
+  const [showCheckinQr, setShowCheckinQr] = useState(false);
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
+
+  const handleCheckIn = async (apptId: string) => {
+    setIsCheckingIn(true);
+    try {
+      const res = await fetch("/api/patient/checkin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appointmentId: apptId })
+      });
+      if (res.ok) {
+        alert("Check-in successful! Receptionist has been notified.");
+        setShowCheckinQr(false);
+        fetchDashboardData();
+      }
+    } catch (err) {
+      console.error("Check-in error:", err);
+    } finally {
+      setIsCheckingIn(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -128,7 +153,9 @@ export default function PatientDashboard() {
   }, [user]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   const handleCancelAppointment = async (apptId: string) => {
@@ -272,6 +299,178 @@ export default function PatientDashboard() {
           ))}
         </div>
       </div>
+
+      {/* Smart Home Screen Greeting Banner */}
+      {activeProfileName === user?.name && (
+        <div className="rounded-2xl border border-slate-200 bg-slate-900 text-white p-6 sm:p-8 shadow-xl relative overflow-hidden">
+          {/* Subtle background decoration */}
+          <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-blue-600/10 to-transparent pointer-events-none" />
+          
+          <div className="space-y-6 relative z-10">
+            <div>
+              <span className="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-1">
+                <Sparkles className="h-4 w-4" />
+                <span>Patient Experience Platform</span>
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-2">Good Morning, {user?.name.split(" ")[0]}</h2>
+              <p className="text-xs sm:text-sm text-slate-400 mt-1 leading-relaxed">
+                Welcome back to SmileOS. Your diagnostic care plan and automation updates are synced.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-slate-800">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Your Next Step</span>
+                <p className="text-xs sm:text-sm font-bold text-white flex items-center gap-1">
+                  🦷 {activeTreatment ? "Complete implant treatment" : "Schedule clinical hygiene check"}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Upcoming Visit</span>
+                <p className="text-xs sm:text-sm font-bold text-white flex items-center gap-1">
+                  📅 {nextAppt ? `${nextAppt.treatmentName} (${nextAppt.date})` : "No visits scheduled"}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Payment Due</span>
+                <p className="text-xs sm:text-sm font-bold text-white flex items-center gap-1">
+                  💳 {balance > 0 ? `$${balance.toFixed(2)} remaining` : "Account fully paid"}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">AI Concierge</span>
+                <p className="text-xs sm:text-sm font-bold text-blue-400 flex items-center gap-1">
+                  💬 Chat assistant active
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Live Appointment Status Tracker */}
+      {activeProfileName === user?.name && nextAppt && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <Calendar className="h-4.5 w-4.5 text-blue-600" />
+                <span>Live Visit Status: {nextAppt.treatmentName}</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">Real-time status tracking of today's appointment journey.</p>
+            </div>
+            
+            {/* Check-In QR Button */}
+            {nextAppt.visitStatus === "SCHEDULED" && (
+              <button
+                onClick={() => setShowCheckinQr(true)}
+                className="rounded-lg bg-blue-600 text-white font-bold px-4 py-2 text-xs hover:bg-blue-700 transition cursor-pointer shadow flex items-center gap-1"
+              >
+                <FileText className="h-3.5 w-3.5" />
+                <span>Check-In QR Code</span>
+              </button>
+            )}
+          </div>
+
+          {/* Stepper progress */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-2">
+            {[
+              { label: "Scheduled", key: "SCHEDULED", desc: "Visit booked in calendar" },
+              { label: "Checked In", key: "CHECKED_IN", desc: "Waiting room check-in complete" },
+              { label: "With Dentist", key: "WITH_DENTIST", desc: "Currently in dentist chair" },
+              { label: "Completed", key: "COMPLETED", desc: "Visit logged & invoice generated" }
+            ].map((step, idx, arr) => {
+              const currentStatus = nextAppt.visitStatus || "SCHEDULED";
+              const statuses = arr.map(s => s.key);
+              const activeIdx = statuses.indexOf(currentStatus);
+              
+              const isCompleted = idx < activeIdx || currentStatus === "COMPLETED";
+              const isActive = idx === activeIdx && currentStatus !== "COMPLETED";
+              
+              return (
+                <div key={step.key} className="flex-1 w-full flex flex-col items-center relative text-center">
+                  {/* Connector Line */}
+                  {idx < arr.length - 1 && (
+                    <div className={`hidden md:block absolute top-4 left-[60%] right-0 h-0.5 -z-10 ${idx < activeIdx ? "bg-green-500" : "bg-slate-100"}`} />
+                  )}
+                  
+                  <span className={`flex h-8 w-8 items-center justify-center rounded-full border-2 ${isCompleted ? "border-green-500 bg-green-50 text-green-700 font-bold" : isActive ? "border-blue-600 bg-blue-50 text-blue-700 font-extrabold animate-pulse" : "border-slate-200 bg-white text-slate-400"}`}>
+                    {isCompleted ? "✓" : idx + 1}
+                  </span>
+                  
+                  <span className={`block text-xs mt-2 font-bold ${isCompleted ? "text-slate-800" : isActive ? "text-blue-700 font-extrabold" : "text-slate-400"}`}>
+                    {step.label}
+                  </span>
+                  <span className="text-[9px] text-slate-400 mt-0.5">
+                    {step.desc}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* QR Check-In Modal overlay */}
+      {showCheckinQr && nextAppt && (
+        <div className="fixed inset-0 bg-slate-950/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl max-w-sm w-full text-center space-y-6 animate-fadeIn">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+              <h3 className="font-bold text-slate-900 text-sm">Self-Service Digital Check-In</h3>
+              <button 
+                onClick={() => setShowCheckinQr(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-xs text-slate-500 leading-relaxed font-semibold">
+                Scan this QR code at the clinic reception terminal to alert the dentist and receptionist of your arrival.
+              </p>
+              
+              {/* Mock QR SVG */}
+              <div className="h-44 w-44 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto p-4">
+                <svg viewBox="0 0 100 100" className="h-full w-full stroke-slate-800 stroke-[3] fill-none">
+                  {/* Outer square */}
+                  <rect x="10" y="10" width="80" height="80" rx="6" strokeWidth="4" />
+                  {/* QR blocks */}
+                  <rect x="20" y="20" width="20" height="20" fill="currentColor" stroke="none" />
+                  <rect x="60" y="20" width="20" height="20" fill="currentColor" stroke="none" />
+                  <rect x="20" y="60" width="20" height="20" fill="currentColor" stroke="none" />
+                  <path d="M50 30h10v10H50zM30 50h10v10H30zM50 50h20v20H50z" fill="currentColor" stroke="none" />
+                </svg>
+              </div>
+
+              <div className="text-slate-600 space-y-1">
+                <strong className="block text-sm">{nextAppt.treatmentName}</strong>
+                <span className="block text-xs font-semibold">{nextAppt.doctor.user.name} • {nextAppt.timeSlot}</span>
+              </div>
+            </div>
+
+            <div className="pt-2 flex flex-col gap-2">
+              <button
+                onClick={() => handleCheckIn(nextAppt.id)}
+                disabled={isCheckingIn}
+                className="w-full text-center rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 text-xs transition cursor-pointer disabled:opacity-50"
+              >
+                {isCheckingIn ? "Processing Check-In..." : "Simulate QR Scan (Check In)"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCheckinQr(false)}
+                className="w-full text-center rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Health History Intelligence Alerts */}
       {activeProfileName === user?.name && alerts.length > 0 && (
@@ -524,7 +723,7 @@ export default function PatientDashboard() {
             </div>
 
             {/* Chat message listings */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
+            <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
               {messages.map((msg, index) => (
                 <div 
                   key={index} 
@@ -548,8 +747,6 @@ export default function PatientDashboard() {
                   </div>
                 </div>
               )}
-              
-              <div ref={chatEndRef} />
             </div>
 
             {/* Help Question Chips */}
