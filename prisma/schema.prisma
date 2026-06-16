@@ -1,0 +1,174 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Clinic {
+  id        String    @id @default(uuid())
+  name      String
+  location  String
+  phone     String
+  
+  doctors   Doctor[]
+  patients  Patient[]
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String   // In a real app we'd hash, but for demo we can store simply
+  role      String   // "ADMIN", "DENTIST", "ASSISTANT", "RECEPTIONIST", "PATIENT"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  patient   Patient?
+  doctor    Doctor?
+  auditLogs AuditLog[]
+}
+
+model Patient {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinicId           String
+  clinic             Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  phone              String?
+  address            String?
+  insuranceProvider  String?
+  insuranceMemberId  String?
+  insuranceCoverage  String?  // e.g. "Active", "Inactive"
+  insuranceCardUrl   String?  // for uploaded card image
+  
+  // Family Account self-referential relationship
+  parentId           String?
+  parent             Patient?  @relation("FamilyRelation", fields: [parentId], references: [id])
+  dependents         Patient[] @relation("FamilyRelation")
+
+  appointments       Appointment[]
+  treatments         Treatment[]
+  invoices           Invoice[]
+  documents          Document[]
+  messages           Message[]
+  followUps          FollowUp[]
+}
+
+model Doctor {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinicId       String
+  clinic         Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  specialty      String   // e.g. "Implantologist", "General Dentist", "Orthodontist"
+  bio            String?
+  availableSlots String?  // Semicolon separated times, e.g. "10:00 AM;1:30 PM;4:00 PM"
+  
+  appointments   Appointment[]
+}
+
+model Appointment {
+  id            String   @id @default(uuid())
+  patientId     String
+  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId      String
+  doctor        Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  date          String   // e.g. "2026-06-17"
+  timeSlot      String   // e.g. "10:00 AM"
+  treatmentName String   // e.g. "Cleaning", "Implant Placement"
+  status        String   // "PENDING", "CONFIRMED", "CANCELLED"
+  notes         String?
+  createdAt     DateTime @default(now())
+}
+
+model Treatment {
+  id              String   @id @default(uuid())
+  patientId       String
+  patient         Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  name            String   // e.g. "Dental Implant Journey"
+  status          String   // "IN_PROGRESS", "COMPLETED", "UPCOMING"
+  cost            Float
+  paid            Float
+  remaining       Float
+  progressPercent Int      // e.g. 60
+  currentStage    String   // e.g. "Implant Placement"
+  
+  phases          TreatmentPhase[]
+  invoices        Invoice[]
+  
+  consentSigned   Boolean   @default(false)
+  consentSignedAt DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model TreatmentPhase {
+  id              String    @id @default(uuid())
+  treatmentId     String
+  treatment       Treatment @relation(fields: [treatmentId], references: [id], onDelete: Cascade)
+  name            String    // e.g. "Phase 1: Diagnosis"
+  status          String    // "COMPLETED", "IN_PROGRESS", "UPCOMING"
+  cost            Float
+  order           Int       // Index order: 1, 2, 3, etc.
+}
+
+model Invoice {
+  id             String     @id @default(uuid())
+  patientId      String
+  patient        Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  treatmentId    String?
+  treatment      Treatment? @relation(fields: [treatmentId], references: [id], onDelete: SetNull)
+  amount         Float
+  insuranceSplit Float
+  patientSplit   Float
+  dueDate        String
+  description    String
+  status         String     // "PAID", "PENDING", "OVERDUE"
+}
+
+model Document {
+  id         String   @id @default(uuid())
+  patientId  String
+  patient    Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  name       String   // e.g. "Panoramic X-Ray"
+  fileUrl    String   // file path
+  type       String   // "X_RAY", "PRESCRIPTION", "REPORT", "OTHER"
+  tag        String?  // tag support: e.g. "jaw", "wisdom-tooth"
+  uploadedAt DateTime @default(now())
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  sender    String   // "PATIENT" or "AI" or "DENTIST"
+  text      String
+  timestamp DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String   // "LOGIN", "VIEW_PATIENT", "EDIT_TREATMENT", "UPLOAD_FILE"
+  details   String
+  timestamp DateTime @default(now())
+}
+
+model FollowUp {
+  id        String   @id @default(uuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  message   String
+  date      String   // e.g. "2026-06-17"
+  sent      Boolean  @default(false)
+  type      String   // "DAY_1", "DAY_7", "DAY_30"
+  createdAt DateTime @default(now())
+}
