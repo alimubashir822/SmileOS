@@ -282,7 +282,7 @@ export default function Home() {
                   <p className="text-sm text-slate-500 mt-1">{galleries[activeGallery].desc}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Before Mock Image Card */}
                   <div className="rounded-lg bg-amber-50/80 border border-amber-200/40 p-4 text-center">
                     <p className="text-xs font-semibold uppercase text-amber-700 tracking-wider">Before Treatment</p>

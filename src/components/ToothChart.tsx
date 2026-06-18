@@ -205,46 +205,50 @@ export default function ToothChart({ patientId, patientName }: ToothChartProps) 
         {/* Upper Arch */}
         <div className="space-y-2">
           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Upper Maxillary Arch</div>
-          <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
-            {upperArch.map((num) => {
-              const record = currentRecords[num];
-              const status = record?.status || "HEALTHY";
-              const isSelected = selectedTooth === num;
-              return (
-                <button
-                  key={num}
-                  onClick={() => setSelectedTooth(num)}
-                  className={`h-9 w-9 rounded-lg border-2 text-xs font-bold transition flex flex-col items-center justify-center relative cursor-pointer ${getStatusColor(status)} ${isSelected ? "ring-2 ring-blue-600 ring-offset-1 border-blue-600" : ""}`}
-                  title={`${num}: ${TOOTH_NAMES[num]}`}
-                >
-                  <span>{num}</span>
-                  <span className={`absolute bottom-0.5 h-1.5 w-1.5 rounded-full ${getStatusDotColor(status)}`} />
-                </button>
-              );
-            })}
+          <div className="overflow-x-auto pb-2">
+            <div className="flex justify-start sm:justify-center min-w-max gap-1.5 sm:gap-2 px-2">
+              {upperArch.map((num) => {
+                const record = currentRecords[num];
+                const status = record?.status || "HEALTHY";
+                const isSelected = selectedTooth === num;
+                return (
+                  <button
+                    key={num}
+                    onClick={() => setSelectedTooth(num)}
+                    className={`h-9 w-9 rounded-lg border-2 text-xs font-bold transition flex flex-col items-center justify-center relative cursor-pointer ${getStatusColor(status)} ${isSelected ? "ring-2 ring-blue-600 ring-offset-1 border-blue-600" : ""}`}
+                    title={`${num}: ${TOOTH_NAMES[num]}`}
+                  >
+                    <span>{num}</span>
+                    <span className={`absolute bottom-0.5 h-1.5 w-1.5 rounded-full ${getStatusDotColor(status)}`} />
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
         {/* Lower Arch */}
         <div className="space-y-2 pt-2 border-t border-slate-200/50">
           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Lower Mandibular Arch</div>
-          <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
-            {lowerArch.map((num) => {
-              const record = currentRecords[num];
-              const status = record?.status || "HEALTHY";
-              const isSelected = selectedTooth === num;
-              return (
-                <button
-                  key={num}
-                  onClick={() => setSelectedTooth(num)}
-                  className={`h-9 w-9 rounded-lg border-2 text-xs font-bold transition flex flex-col items-center justify-center relative cursor-pointer ${getStatusColor(status)} ${isSelected ? "ring-2 ring-blue-600 ring-offset-1 border-blue-600" : ""}`}
-                  title={`${num}: ${TOOTH_NAMES[num]}`}
-                >
-                  <span>{num}</span>
-                  <span className={`absolute bottom-0.5 h-1.5 w-1.5 rounded-full ${getStatusDotColor(status)}`} />
-                </button>
-              );
-            })}
+          <div className="overflow-x-auto pb-2">
+            <div className="flex justify-start sm:justify-center min-w-max gap-1.5 sm:gap-2 px-2">
+              {lowerArch.map((num) => {
+                const record = currentRecords[num];
+                const status = record?.status || "HEALTHY";
+                const isSelected = selectedTooth === num;
+                return (
+                  <button
+                    key={num}
+                    onClick={() => setSelectedTooth(num)}
+                    className={`h-9 w-9 rounded-lg border-2 text-xs font-bold transition flex flex-col items-center justify-center relative cursor-pointer ${getStatusColor(status)} ${isSelected ? "ring-2 ring-blue-600 ring-offset-1 border-blue-600" : ""}`}
+                    title={`${num}: ${TOOTH_NAMES[num]}`}
+                  >
+                    <span>{num}</span>
+                    <span className={`absolute bottom-0.5 h-1.5 w-1.5 rounded-full ${getStatusDotColor(status)}`} />
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

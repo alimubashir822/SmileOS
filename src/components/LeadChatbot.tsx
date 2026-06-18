@@ -98,12 +98,12 @@ export default function LeadChatbot() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans">
+    <div className="font-sans">
       {/* Floating Toggle Button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-xl hover:bg-blue-700 hover:scale-105 transition transform cursor-pointer animate-pulse-gentle"
+          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-xl hover:bg-blue-700 hover:scale-105 transition transform cursor-pointer animate-pulse-gentle"
           id="receptionist-chat-btn"
         >
           <MessageSquare className="h-6 w-6" />
@@ -112,7 +112,7 @@ export default function LeadChatbot() {
 
       {/* Chat Window Popup */}
       {isOpen && (
-        <div className="flex h-[500px] w-[360px] flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden animate-fadeIn">
+        <div className="fixed bottom-6 right-4 sm:right-6 z-50 flex h-[500px] max-h-[calc(100vh-4rem)] w-[calc(100vw-2rem)] sm:w-[360px] flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden animate-fadeIn">
           {/* Header */}
           <div className="bg-slate-900 p-4 text-white flex items-center justify-between">
             <div className="flex items-center space-x-2.5">

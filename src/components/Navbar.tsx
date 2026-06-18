@@ -39,7 +39,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Nav Links */}
-        <nav className="hidden md:flex space-x-8">
+        <nav className="hidden lg:flex space-x-6 xl:space-x-8">
           {navLinks.map((link) => (
             <Link
               key={link.name}
@@ -52,7 +52,7 @@ export default function Navbar() {
         </nav>
 
         {/* Desktop Buttons */}
-        <div className="hidden md:flex items-center space-x-4">
+        <div className="hidden lg:flex items-center space-x-4">
           {user ? (
             <>
               <Link
@@ -89,7 +89,7 @@ export default function Navbar() {
         </div>
 
         {/* Mobile menu button */}
-        <div className="flex md:hidden">
+        <div className="flex lg:hidden">
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="text-slate-600 hover:text-slate-900 focus:outline-none"
@@ -101,7 +101,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden border-b border-slate-200 bg-white px-4 py-4 space-y-3">
+        <div className="lg:hidden border-b border-slate-200 bg-white px-4 py-4 space-y-3">
           {navLinks.map((link) => (
             <Link
               key={link.name}
