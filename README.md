@@ -1,3 +1,5 @@
+Created & Developed by [Mubashir Ali](#developer-creator) (Full-Stack Healthcare Technology Engineer | AI Healthcare Solutions Builder)
+
 # SmileOS — AI-Powered Dental Operating System
 
 SmileOS is an enterprise-grade, multi-role Practice Management and Patient Care Operating System built with **Next.js 16**, **TypeScript**, **Tailwind CSS 4**, and **Prisma 7 + SQLite**. 
@@ -125,3 +127,27 @@ To test the system flow:
 5. **Interactive Tooth Chart**: Click on Sarah Connor, click **Tooth 3** (implant) and **Tooth 14** (restored) to check their notes. Type a new clinical log, save it, and check that the record updates.
 6. **Patient Visit Progression**: Click **Call to Dental Chair** and verify the status changes to "In Chair" (sidebar stats sync). Click **Complete Visit** to complete the visit.
 7. **Audit Logs**: Log out, sign in as `admin@smileos.com`, and check the **HIPAA Compliance Audit Ledger** to verify the check-in and treatment updates were securely logged.
+
+---
+
+<a id="developer-creator"></a>
+## 👤 Developer & Creator
+
+I am a Full-Stack Healthcare Technology Developer specializing in building modern, scalable, and AI-powered healthcare platforms. I create high-performance digital solutions using React.js, Next.js, TypeScript, and Tailwind CSS to deliver fast, secure, and user-friendly experiences.
+
+My expertise covers complete application development, from frontend architecture and responsive interfaces to backend systems powered by Node.js, REST APIs, GraphQL, PostgreSQL, and Prisma ORM. I build reliable platforms designed for scalability, performance, and long-term growth.
+
+I work with modern cloud infrastructure including AWS, Vercel Edge, Google Cloud, Cloudflare CDN, Docker, and CI/CD pipelines to deploy secure and optimized applications.
+
+With a strong focus on healthcare technology, I develop solutions including patient portals, AI automation systems, EHR integrations, and healthcare applications built around industry standards such as FHIR APIs and HIPAA compliance requirements.
+
+My goal is to combine modern software engineering, cloud technologies, and healthcare innovation to help organizations build smarter digital experiences that improve patient engagement, operational efficiency, and healthcare delivery.
+
+### 📫 Connect with Me
+
+- 💼 **LinkedIn**: <a href="https://linkedin.com/in/mubashirali822" target="_blank" rel="noopener noreferrer">mubashirali822</a>
+- 📧 **Email**: <a href="mailto:alimubashir822@gmail.com" target="_blank" rel="noopener noreferrer">alimubashir822@gmail.com</a>
+- 🌐 **Website**: <a href="https://www.medclinicx.com/" target="_blank" rel="noopener noreferrer">medclinicx.com</a>
+- 🏥 **View More Healthcare Solutions**: <a href="https://www.medclinicx.com/demo" target="_blank" rel="noopener noreferrer">medclinicx.com/demo</a>
+
+⭐ *Building the next generation of digital healthcare technology.*
